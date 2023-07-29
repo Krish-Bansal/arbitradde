@@ -17,7 +17,7 @@ const authoRizeUserCreate = async (req, res) => {
       whatsAppNumber: whatsAppNo,
       nickName,
       authorityLetter: req.body.authorityLetter ?? '',
-      createdBy: req.user._id,
+      // createdBy: req.user._id,
       mPassword: mPassword
     })
     const data = await authoRizeData.save();
