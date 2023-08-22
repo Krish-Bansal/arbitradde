@@ -2,10 +2,11 @@ const mongoose = require("mongoose");
 
 const ContractSchema = new mongoose.Schema(
   {
-    userId:{type: mongoose.Schema.Types.ObjectId},
+    userId: { type: mongoose.Schema.Types.ObjectId },
     seller: { type: String },
     sellerRepresentative: { type: String },
     buyer: { type: String },
+    buyeremail: { type: String, required: true },
     buyerRepresentative: {
       type: String,
     },
@@ -16,15 +17,15 @@ const ContractSchema = new mongoose.Schema(
     volumePerIns: { type: String },
     volumeRate: { type: Number },
     incoterm: { type: String },
-    origin: { type: String},
-    destination: { type: String},
+    origin: { type: String },
+    destination: { type: String },
     modeOfTransport: {
       type: String,
     },
     deliveryPeriod: { type: Date },
     deliveryBasis: { type: String },
     price: { type: Number },
-    pricePerIns: {type: String },
+    pricePerIns: { type: String },
     paymentTerm: { type: String },
     freeTime: { type: Number },
     freeTimePerIns: { type: String },
@@ -36,11 +37,13 @@ const ContractSchema = new mongoose.Schema(
     disputeResolution: {
       type: String,
     },
-    contractNumber:{
+    contractNumber: {
       type: String,
     },
-    isProcessComplete: {type:Boolean, default: false},
-    status:{ type:String, enum: ["approve", "reject", "change"]}
+    createdby: { type: String },
+    isProcessComplete: { type: Boolean, default: false },
+    status: { type: String, enum: ["approve", "reject", "change", "none"], default: "none" },
+    pdfFile: { type: String }
   },
   { timestamps: true }
 );

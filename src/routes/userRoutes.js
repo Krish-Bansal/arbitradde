@@ -1,4 +1,4 @@
-const { userCreateFunction, updateProfile, uploadImage, emailVerify, loginFunction } = require("../controllers/UserController");
+const { userCreateFunction, updateProfile, uploadImage, emailVerify, loginFunction } = require("../controllers/userController")
 const { multerStorage } = require("../utils/fileUpload");
 const multer = require('multer')
 const router = require("express").Router();

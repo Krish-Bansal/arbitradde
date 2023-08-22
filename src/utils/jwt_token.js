@@ -5,7 +5,7 @@ const createJwt = (email) => {
     {
       email
     },
-    process.env.JWT_TOKEN_SECRET,
+    process.env.JWT_TOKEN,
     {
       expiresIn: '30d',
     },
@@ -17,7 +17,7 @@ const createJwt = (email) => {
 const decryptToken = async (token) => {
   const data = jwt.verify(
     token,
-    process.env.JWT_TOKEN_SECRET
+    process.env.JWT_TOKEN
   )
   return data
 }

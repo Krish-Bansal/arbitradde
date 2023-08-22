@@ -7,7 +7,6 @@ const server = http.createServer(app, (req, res) => {
   res.setHeader("Content-Type", "text/plain");
   res.end("zeet Node!");
 });
-
 server.listen(process.env.PORT || 5000, hostname, () => {
   console.log("Backend server is running!" + `http://${hostname}:${5000}`);
 });
