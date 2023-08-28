@@ -205,7 +205,7 @@ const acceptContract = async (req, res) => {
     // console.log(`PDF file saved with short name: ${shortPdfFileName}`); pdfStream.on('finish', () => {
     //   console.log(`PDF file saved at: ${pdfFilePath} `);
     // });
-    const frontendpdf = `http://localhost:3000/contract/${contractData?.contractNumber}`
+    const frontendpdf = `https://arbi-front-five.vercel.app/contract/${contractData?.contractNumber}`
     const usersname = contractData?.createdby
     const volumne = contractData?.volume
     const volumeIns = contractData?.volumePerIns
@@ -520,17 +520,17 @@ const createContact = async (req, res) => {
 
     // Left-aligned button
     doc.rect(buttonXLeft, buttonY, buttonWidth, buttonHeight).stroke();
-    doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/accept/${numberOfContract}`);
+    doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/accept/${numberOfContract}`);
     doc.text('Accept', buttonXLeft + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
 
     // Center-aligned button with link
     doc.rect(buttonXCenter, buttonY, buttonWidth, buttonHeight).stroke();
-    doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/reject/${numberOfContract}`);
+    doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/reject/${numberOfContract}`);
     doc.text('Reject', buttonXCenter + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
 
     // Right-aligned button with link
     doc.rect(buttonXRight, buttonY, buttonWidth, buttonHeight).stroke();
-    doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/change/${numberOfContract}`);
+    doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/change/${numberOfContract}`);
     doc.text('Request for Change', buttonXRight + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
     doc.end();
 
@@ -539,7 +539,7 @@ const createContact = async (req, res) => {
     // console.log(`PDF file saved with short name: ${shortPdfFileName}`); pdfStream.on('finish', () => {
     //   console.log(`PDF file saved at: ${pdfFilePath} `);
     // });
-    const frontendpdf = `http://localhost:3000/contract/${numberOfContract}`
+    const frontendpdf = `https://arbi-front-five.vercel.app/contract/${numberOfContract}`
     const usersname = req.user.nameOfUser
     const volumne = contractData?.volume
     const volumeIns = contractData?.volumePerIns
