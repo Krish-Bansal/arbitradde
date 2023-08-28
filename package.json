@@ -4,13 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-<<<<<<< HEAD
     "start": "nodemon index.js",
     "dev": "nodemon index.js"
-=======
-    "start": "nodemon src/index.js",
-    "dev": "nodemon src/index.js"
->>>>>>> 4339ca7eaa5f1017956353bbd82d28adf6b2cf76
   },
   "keywords": [],
   "author": "",
