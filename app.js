@@ -2,12 +2,12 @@ const express = require('express');
 const dotenv = require("dotenv");
 const app = express();
 dotenv.config();
-require("./config/db")
-const userRoute = require('./routes/userRoutes')
-const authoRizeROute = require('./routes/authoRizeRoutes')
-const contractRoute = require('./routes/contractRoute');
+require("./src/config/db")
+const userRoute = require('./src/routes/userRoutes')
+const authoRizeROute = require('./src/routes/authoRizeRoutes')
+const contractRoute = require('./src/routes/contractRoute');
 const cors = require("cors");
-const { checkAuth } = require('./middleware/checkAdmin');
+const { checkAuth } = require('./src/middleware/checkAdmin');
 
 app.use(cors());
 app.use(express.json());
