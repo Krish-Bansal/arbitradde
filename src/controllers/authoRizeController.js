@@ -1,16 +1,16 @@
 const AuthoRizeModel = require("../models/AuthoRizeModel");
 const Token = require("../models/tokenSchema");
 const { createJwt } = require("../utils/jwt_token");
-const { v4: uuidv4 } = require("uuid");
+// const { v4: uuidv4 } = require("uuid");
 const sendEmail = require("../utils/email/sendEmail");
 const authoRizeUserCreate = async (req, res) => {
   try {
     const {
       nameOfUser, aadharNo, emailId, whatsAppNo, nickName
     } = req.body
-    const randomUUID = uuidv4();
-    const randomPassword = randomUUID.substr(0, 4);
-    const mPassword = randomPassword
+    // const randomUUID = uuidv4();
+    // const randomPassword = randomUUID.substr(0, 4);
+    // const mPassword = randomPassword;
     const authoRizeData = new AuthoRizeModel({
       nameOfUser,
       aadharNo,
@@ -19,16 +19,58 @@ const authoRizeUserCreate = async (req, res) => {
       nickName,
       authorityLetter: req.body.authorityLetter ?? '',
       createdBy: req.user._id,
-      mPassword: mPassword
+      // mPassword: mPassword
     })
     const data = await authoRizeData.save();
-    await sendEmail(emailId, "please use this password for login!", { mPassword }, "./template/password.handlebars")
+
+    // Replace 'id' with 'data._id' in the frontendMPIN URL
+    const frontendMPIN = `https://arbi-front-five.vercel.app/set-mpin/${data._id}`;
+    await sendEmail(emailId, "Set your MPIN from the link below.", { link: frontendMPIN }, "./template/password.handlebars")
     return res.status(201).json(data)
   } catch (error) {
     console.log(error)
     return res.status(500).json({ msg: error.message })
   }
 };
+
+const setMpin = async (req, res) => {
+  try {
+    const { id } = req.params; // Assuming the ID is in the request parameters
+
+    // Find the user in the database by ID
+    const user = await AuthoRizeModel.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Check if the user already has an MPIN
+    if (user.mpin) {
+      return res.status(400).json({ msg: 'MPIN already set for this user' });
+    }
+
+    // Get the MPIN from the request body
+    const { mpin } = req.body;
+
+    // Check if the MPIN is a 4-digit number
+    if (!/^\d{4}$/.test(mpin)) {
+      return res.status(400).json({ msg: 'Invalid MPIN format. It should be a 4-digit number' });
+    }
+
+    // Update the user's MPIN and isActive status
+    user.mPassword = mpin;
+    user.isActive = true;
+
+    // Save the updated user in the database
+    await user.save();
+
+    return res.status(200).json({ msg: 'MPIN set successfully' });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: error.message });
+  }
+};
+
 
 const loginAuth = async (req, res) => {
   try {
@@ -97,5 +139,6 @@ module.exports = {
   authoRizeUserCreate,
   loginAuth,
   getAuthorisedUsers,
-  removeAuthorisedUsers
+  removeAuthorisedUsers,
+  setMpin
 }
