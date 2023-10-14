@@ -10,6 +10,92 @@ const sendEmail = require("../utils/email/sendEmail");
 const path = require("path");
 
 
+const getRepresentative = async (req, res) => {
+  const selectedSellerId = req.query.selectedSeller;
+  console.log(selectedSellerId)
+  try {
+    // Look for the Authorization model using the selectedSellerId
+    const user = await UserModel.findOne({ nameOfEntity: selectedSellerId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // If the user is found, use the user's _id in further processing
+    const userId = user._id;
+
+    const authorizations = await AuthoRizeModel.find({ createdBy: userId });
+
+    if (!authorizations || authorizations.length === 0) {
+      // If no authorizations are found, set namesOfUser to an empty array
+      const namesOfUser = [];
+      return res.status(200).json({ namesOfUser });
+    }
+
+    // Extract the names from the matched authorizations
+    const namesOfUser = authorizations.map((authorization) => authorization.nameOfUser);
+
+    // Respond with the names of the user from matched authorizations
+    return res.status(200).json({ namesOfUser });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+const getRepresentative2 = async (req, res) => {
+  const selectedSellerId = req.query.selectedSeller;
+  console.log(selectedSellerId)
+  try {
+    // Look for the Authorization model using the selectedSellerId
+    const user = await UserModel.findOne({ nameOfEntity: selectedSellerId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // If the user is found, use the user's _id in further processing
+    const userId = user._id;
+
+    const authorizations = await AuthoRizeModel.find({ createdBy: userId });
+
+    if (!authorizations || authorizations.length === 0) {
+      // If no authorizations are found, set namesOfUser to an empty array
+      const namesOfUser = [];
+      return res.status(200).json({ namesOfUser });
+    }
+
+    // Extract the names from the matched authorizations
+    const namesOfUser = authorizations.map((authorization) => authorization.nameOfUser);
+
+    // Respond with the names of the user from matched authorizations
+    return res.status(200).json({ namesOfUser });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+const retrieveEmail = async (req, res) => {
+  const selectedValue = req.body.selectedValue; // Assuming selectedValue is sent in the request body
+
+  try {
+    // Assuming authorizeModel is your Mongoose model
+    const authorization = await AuthoRizeModel.findOne({ nameOfUser: selectedValue });
+
+    if (authorization) {
+      // If a match is found, send the email
+      return res.status(200).json({ selectedBuyeremail: authorization.email });
+    } else {
+      return res.status(404).json({ error: "User not found" });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+
 const acceptContract = async (req, res) => {
   try {
     const { contractnumber } = req.body;
@@ -295,6 +381,7 @@ const createContact = async (req, res) => {
       destination,
       modeOfTransport,
       deliveryPeriod,
+      deliveryPeriodto,
       deliveryBasis,
       price,
       pricePerIns,
@@ -343,6 +430,7 @@ const createContact = async (req, res) => {
       destination,
       modeOfTransport,
       deliveryPeriod: new Date(deliveryPeriod),
+      deliveryPeriodto: new Date(deliveryPeriodto),
       deliveryBasis,
       price,
       pricePerIns,
@@ -622,4 +710,7 @@ module.exports = {
   getAllAuthNames,
   acceptContract,
   rejectContract,
+  getRepresentative,
+  getRepresentative2,
+  retrieveEmail
 };

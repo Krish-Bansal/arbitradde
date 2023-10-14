@@ -23,6 +23,7 @@ const ContractSchema = new mongoose.Schema(
       type: String,
     },
     deliveryPeriod: { type: Date },
+    deliveryPeriodto: { type: Date },
     deliveryBasis: { type: String },
     price: { type: Number },
     pricePerIns: { type: String },
