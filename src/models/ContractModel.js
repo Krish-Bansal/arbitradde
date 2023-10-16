@@ -5,6 +5,7 @@ const ContractSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId },
     seller: { type: String },
     sellerRepresentative: { type: String },
+    sellerEmail: { type: String, required: true },
     buyer: { type: String },
     buyeremail: { type: String, required: true },
     buyerRepresentative: {

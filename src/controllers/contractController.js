@@ -367,6 +367,7 @@ const createContact = async (req, res) => {
     const {
       seller,
       sellerRepresentative,
+      sellerEmail,
       buyer,
       buyeremail,
       buyerRepresentative,
@@ -416,6 +417,7 @@ const createContact = async (req, res) => {
     const data = new ContractModel({
       seller,
       sellerRepresentative,
+      sellerEmail,
       buyer,
       buyeremail,
       buyerRepresentative,
@@ -637,11 +639,13 @@ const createContact = async (req, res) => {
     const seller1 = contractData?.seller
     const buyer1 = contractData?.buyer
     const buyeremail1 = contractData?.buyeremail
+    const sellerEmail1 = contractData?.sellerEmail
     contractData.pdfFile = shortPdfFileName;
     contractData.number = contractData?.contractNumber;
     contractData.createdby = req.user.nameOfUser
     await contractData.save()
     await sendEmail(buyeremail1, "You have a new Proposal", { price1, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
+    await sendEmail(sellerEmail1, "You have a new Proposal", { price1, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
     return res.status(201).json({
       status: 'success',
       data: contractData,

@@ -15,6 +15,4 @@ router.post('/get-email', retrieveEmail)
 
 
 
-
-
 module.exports = router;
