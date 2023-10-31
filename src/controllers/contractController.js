@@ -9,7 +9,6 @@ const fs = require('fs');
 const sendEmail = require("../utils/email/sendEmail");
 const path = require("path");
 
-
 const getRepresentative = async (req, res) => {
   const selectedSellerId = req.query.selectedSeller;
   console.log(selectedSellerId)
@@ -117,21 +116,18 @@ const acceptContract = async (req, res) => {
     // Assuming contractData.createdAt is a Date object
     const tradeDate = contractData?.createdAt.toISOString().substring(0, 10);
     doc.pipe(pdfStream);
-    doc.fontSize(14).text('Trade Confirmation', { align: 'center', underline: true, bold: true });
-    doc.moveDown();
-    doc.fontSize(11).text(`Contract Number:${contractData?.contractNumber}`, { underline: true, align: 'right' });
+    doc.fontSize(14).text(`Trade Confirmation (Contract Number:${contractData?.contractNumber})`, { align: 'center', underline: true, bold: true });
     doc.moveDown();
     doc.fontSize(11).text(`Trade Date:${tradeDate}`);
     doc.moveDown();
-    doc.text('Seller Represented by Mr ', { continued: true });
-    doc.text(contractData?.seller, { underline: true, continued: true });
-    doc.text(' hereby agrees to sell and Buyer Represented By Mr ', { underline: false, continued: true });
-    doc.text(contractData?.buyer, { underline: true, continued: true });
-    doc.text(' agrees to purchase the commodity in accordance with the following terms and conditions', { underline: false });
     const pageWidth = 595; // Width of the page in points (adjust as needed)
     const margin = 50; // Increased margin for both sides
     const boxHeight = 60; // Decreased height for the boxes
     const boxWidth = (pageWidth - margin) / 2.125; // Width for each box
+    // const sellerDoc = await AuthoRizeModel.find({ nameOfUser: contractData?.seller })
+    // if (sellerDoc) {
+    //   const sellerAddress = sellerDoc.
+    // }
 
     // Calculate positions for seller and buyer sections with increased margins
     const sellerX = margin; // Add margin to the left side
@@ -155,6 +151,11 @@ const acceptContract = async (req, res) => {
     // Move down after the boxes and buyer data
     doc.moveDown(4);
     doc.x = initialX
+    // doc.text('Seller Represented by Mr ', { continued: true });
+    // doc.text(contractData?.seller, { underline: true, continued: true });
+    // doc.text(' hereby agrees to sell and Buyer Represented By Mr ', { underline: false, continued: true });
+    // doc.text(contractData?.buyer, { underline: true, continued: true });
+    // doc.text(' agrees to purchase the commodity in accordance with the following terms and conditions', { underline: false });
     doc.text('Commodity: ', { bold: true, continued: true })
     doc.text(contractData?.commodity)
     doc.moveDown()
@@ -192,9 +193,9 @@ const acceptContract = async (req, res) => {
     doc.text('Other Terms: ', { bold: true, continued: true, })
     doc.text(` ${contractData?.otherTerms}`)
     doc.moveDown()
-    doc.text(`Applicable Trade Rules: This trade Confirmation shall be governed by Arbitrade Rules of Grain Trade dated (NOT DEFINED) ("${contractData?.applicableRules}" read with Amendment dated (NOT DEFINED) to the rules between the parties)`)
+    doc.text(`Applicable Trade Rules: This Trade Confirmation shall be governed by All India Grain Merchant Association Rules.`)
     doc.moveDown()
-    doc.text(`Dispute Resolution: Arbitration conducted by Arbitrade India (See Rule (NOT DEFINED) of Arbitrade Rules of Grains Trade dated (NOT DEFINED))`)
+    doc.text(`Dispute Resolution: Arbitration as provided under All India Grain Merchants Association Rules.`)
     doc.moveDown()
     doc.fontSize(8).text(`proposed and digitally signed by `, { align: 'left' })
     doc.text(`Mr.${contractData?.seller} on behalf of`, { align: 'left' })
@@ -204,22 +205,39 @@ const acceptContract = async (req, res) => {
     const hour = updatedAtDate.getHours();
     const minute = updatedAtDate.getMinutes();
     const createdAtDate = new Date(contractData?.createdAt);
-
+    const date1 = new Date(contractData.updatedAt);
+    const formattedDate1 = date1.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const date = new Date(contractData.createdAt);
+    const formattedDate = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
     const hour1 = createdAtDate.getHours();
     const minute1 = createdAtDate.getMinutes();
-    doc.text(`on ${updatedAtDate.toISOString().substring(0, 10)}at ${hour}:${minute}`, { align: 'left' })
+    doc.text(`on ${formattedDate1} at ${hour}:${minute}`, { align: 'left' })
     doc.moveUp(4)
     doc.fontSize(8).text(`proposed and digitally signed by `, { align: 'center' })
-    doc.text(`Mr.${contractData?.createdby} on behalf of`, { align: 'center' })
-    doc.text(`M/s (NOT DEFINED) in the`, { align: 'center' })
+    doc.text(`Mr.${contractData?.createdby} `, { align: 'center' })
+    doc.text(` in the`, { align: 'center' })
     doc.text(`capacity of broker`, { align: 'center' })
-    doc.text(`on ${createdAtDate.toISOString().substring(0, 10)}at ${hour1}:${minute1}`, { align: 'center' })
+    doc.text(`on ${formattedDate} at ${hour1}:${minute1}`, { align: 'center' })
     doc.moveUp(5)
     doc.fontSize(8).text(`proposed and digitally signed by `, { align: 'right' })
-    doc.text(`Mr.${contractData?.buyer} on behalf of`, { align: 'right' })
-    doc.text(`M/s (NOT DEFINED) in the capacity of buyer`, { align: 'right' })
-    doc.text(`on ${updatedAtDate.toISOString().substring(0, 10)}at ${hour}:${minute}`, { align: 'right' })
-    doc.moveDown(4)
+    doc.text(`Mr.${contractData?.buyer} `, { align: 'right' })
+    doc.text(` in the capacity of buyer`, { align: 'right' })
+    doc.text(`on ${formattedDate1} at ${hour}:${minute}`, { align: 'right' })
+    doc.moveDown()
+    doc.moveDown()
+    doc.moveDown()
+    doc.moveDown()
+    doc.moveDown()
+    doc.moveDown()
+
     doc.fontSize(11).text(`Contract Number: ${contractData?.contractNumber}`, { bold: true, underline: true, align: 'right' });
     doc.moveDown()
     doc.fontSize(13).text(`Attachment A`, { bold: true, underline: true, align: 'center' });
@@ -268,21 +286,18 @@ const acceptContract = async (req, res) => {
     });
     doc.x = initialX
     doc.moveDown(5)
-    doc.fontSize(8).text(`proposed and digitally signed by `, { align: 'left' })
-    doc.text(`Mr.${contractData?.seller} on behalf of`, { align: 'left' })
-    doc.text(`M/s (NOT DEFINED) in the capacity of seller`, { align: 'left' })
-    doc.text(`on ${updatedAtDate.toISOString().substring(0, 10)}at ${hour}:${minute}`, { align: 'left' })
+    doc.text(`on ${formattedDate1} at ${hour}:${minute}`, { align: 'left' })
     doc.moveUp(4)
     doc.fontSize(8).text(`proposed and digitally signed by `, { align: 'center' })
-    doc.text(`Mr.${contractData?.createdby} on behalf of`, { align: 'center' })
-    doc.text(`M/s (NOT DEFINED) in the`, { align: 'center' })
+    doc.text(`Mr.${contractData?.createdby} `, { align: 'center' })
+    doc.text(` in the`, { align: 'center' })
     doc.text(`capacity of broker`, { align: 'center' })
-    doc.text(`on ${createdAtDate.toISOString().substring(0, 10)}at ${hour1}:${minute1}`, { align: 'center' })
+    doc.text(`on ${formattedDate} at ${hour1}:${minute1}`, { align: 'center' })
     doc.moveUp(5)
     doc.fontSize(8).text(`proposed and digitally signed by `, { align: 'right' })
-    doc.text(`Mr.${contractData?.buyer} on behalf of`, { align: 'right' })
-    doc.text(`M/s (NOT DEFINED) in the capacity of buyer`, { align: 'right' })
-    doc.text(`on ${updatedAtDate.toISOString().substring(0, 10)}at ${hour}:${minute}`, { align: 'right' })
+    doc.text(`Mr.${contractData?.buyer} `, { align: 'right' })
+    doc.text(` in the capacity of buyer`, { align: 'right' })
+    doc.text(`on ${formattedDate1} at ${hour}:${minute}`, { align: 'right' })
     doc.moveDown(4)
     doc.end();
 
@@ -356,12 +371,40 @@ const rejectContract = async (req, res) => {
 };
 
 
-function generateShortContractNumber() {
-  const timestamp = Date.now().toString(36); // Convert current timestamp to base36
-  const randomPart = Math.random().toString(36).substr(2, 5); // Generate a random string
 
-  return `${timestamp}-${randomPart}`;
+
+// let contractCounter = 0;
+
+// function generateShortContractNumber() {
+//   // Increment the counter for each new contract
+//   contractCounter++;
+
+//   // Ensure the counter is 4 digits by taking the last 4 digits
+//   const paddedCounter = ('0000' + (contractCounter % 10000)).slice(-4);
+
+//   return paddedCounter;
+// }
+const crypto = require('crypto');
+
+function generateShortContractNumber() {
+  // Generate a unique value, for example, using a timestamp
+  const uniqueValue = Date.now().toString();
+
+  // Calculate a hash using SHA-1
+  const hash = crypto.createHash('sha1').update(uniqueValue).digest('hex');
+
+  // Take the first 4 characters of the hash and convert to a number
+  const number = parseInt(hash.slice(0, 4), 16);
+
+  // Ensure it's a 4-digit number
+  return ('000' + number).slice(-4);
 }
+
+const uniqueNumber = generateShortContractNumber();
+console.log(uniqueNumber);
+
+
+
 const createContact = async (req, res) => {
   try {
     const {
@@ -458,17 +501,12 @@ const createContact = async (req, res) => {
     // Assuming contractData.createdAt is a Date object
     const tradeDate = contractData?.createdAt.toISOString().substring(0, 10);
     doc.pipe(pdfStream);
-    doc.fontSize(14).text('Trade Confirmation', { align: 'center', underline: true, bold: true });
+    doc.fontSize(14).text(`Trade Confirmation (Contract Number:${contractData?.contractNumber})`, { align: 'center', underline: true, bold: true });
     doc.moveDown();
-    doc.fontSize(11).text(`Contract Number:${contractData?.contractNumber}`, { underline: true, align: 'right' });
-    doc.moveDown();
+    // doc.fontSize(11).text(`Contract Number:${contractData?.contractNumber}`, { underline: true, align: 'right' });
     doc.fontSize(11).text(`Trade Date:${tradeDate}`);
     doc.moveDown();
-    doc.text('Seller Represented by Mr ', { continued: true });
-    doc.text(contractData?.seller, { underline: true, continued: true });
-    doc.text(' hereby agrees to sell and Buyer Represented By Mr ', { underline: false, continued: true });
-    doc.text(contractData?.buyer, { underline: true, continued: true });
-    doc.text(' agrees to purchase the commodity in accordance with the following terms and conditions', { underline: false });
+
     const pageWidth = 595; // Width of the page in points (adjust as needed)
     const margin = 50; // Increased margin for both sides
     const boxHeight = 60; // Decreased height for the boxes
@@ -484,18 +522,24 @@ const createContact = async (req, res) => {
     doc.rect(buyerX, sellerY, boxWidth, boxHeight).stroke();
 
     // Add text for seller and buyer with proper alignment and continuation
-    doc.text('Seller Data:', sellerX + 10, sellerY + 10, { continued: true });
+    doc.text('Seller:', sellerX + 10, sellerY + 10, { continued: true });
     doc.text(contractData?.seller, { continued: true });
     doc.moveDown();
 
     const buyerTextX = buyerX - 100; // X position for "Buyer Data"
     const buyerTextY = sellerY + 10; // Y position for "Buyer Data"
-    doc.text('Buyer Data:', buyerTextX, buyerTextY, { continued: true });
+    doc.text('Buyer:', buyerTextX, buyerTextY, { continued: true });
     doc.text(contractData?.buyer, { continued: false });
 
     // Move down after the boxes and buyer data
     doc.moveDown(4);
     doc.x = initialX
+    doc.text('Seller Represented by Mr ', { continued: true });
+    doc.text(contractData?.seller, { underline: true, continued: true });
+    doc.text(' hereby agrees to sell and Buyer Represented By Mr ', { underline: false, continued: true });
+    doc.text(contractData?.buyer, { underline: true, continued: true });
+    doc.text(' agrees to purchase the commodity in accordance with the following terms and conditions:-', { underline: false });
+    doc.moveDown()
     doc.text('Commodity: ', { bold: true, continued: true })
     doc.text(contractData?.commodity)
     doc.moveDown()
@@ -520,32 +564,52 @@ const createContact = async (req, res) => {
     doc.text('Mode of Transport: ', { bold: true, continued: true, align: 'left' })
     doc.text(contractData?.modeOfTransport)
     doc.moveDown()
-    doc.text('Price: ', { bold: true, continued: true, })
-    doc.text(`Rs.${contractData?.price} per ${contractData?.pricePerIns}`)
+    doc.text('Price: Rs.', { bold: true, continued: true, })
+    doc.text(contractData?.price, { underline: true, continued: true })
+    doc.text('/- per ', { underline: false, continued: true });
+
+    doc.text(contractData?.pricePerIns, { underline: false, continued: false })
+
     doc.moveDown()
-    doc.text('Payment Term: ', { bold: true, continued: true, })
+    doc.text('Payment Term: ', { bold: true, continued: true })
     doc.text(`Within ${contractData?.paymentTerm} after ${contractData?.deliveryBasis}`)
     doc.moveDown()
     doc.text('Free Time: ', { continued: true, align: 'left' })
-    doc.text(`${contractData?.freeTime} ${contractData?.freeTimePerIns}`, { continued: true })
-    doc.text(`Detention Charges: Rs${contractData?.detentionOrDemurrageCharges} ${detentionOrDemurrageChargesPerIns}`, { continued: false, bold: false, align: 'center' })
+    doc.text(`${contractData?.freeTime} ${contractData?.freeTimePerIns}`, { continued: false })
+    doc.moveDown()
+    doc.text('Detention Charges: Rs.', { continued: true })
+    doc.text(contractData?.detentionOrDemurrageCharges, { underline: true, continued: true })
+    doc.text('/- ', { underline: false, continued: true });
+    doc.text(`${detentionOrDemurrageChargesPerIns} `, { underline: false, continued: false, bold: false })
     doc.moveDown()
     doc.text('Other Terms: ', { bold: true, continued: true, })
-    doc.text(` ${contractData?.otherTerms}`)
+    doc.text(` ${contractData?.otherTerms} `)
     doc.moveDown()
-    doc.text(`Applicable Trade Rules: This trade Confirmation shall be governed by Arbitrade Rules of Grain Trade dated (NOT DEFINED) ("${contractData?.applicableRules}" read with Amendment dated (NOT DEFINED) to the rules between the parties)`)
+    doc.text(`Applicable Trade Rules: This Trade Confirmation shall be governed by All India Grain Merchant Association Rules.`)
     doc.moveDown()
-    doc.text(`Dispute Resolution: Arbitration conducted by Arbitrade India (See Rule (NOT DEFINED) of Arbitrade Rules of Grains Trade dated (NOT DEFINED))`)
+    doc.text(`Dispute Resolution: Arbitration as provided under All India Grain Merchants Association Rules.`)
     doc.moveDown()
     doc.fontSize(9).text(`proposed and digitally signed by `, { align: 'center' })
-    doc.text(`Mr.${req.user.nameOfUser} on behalf of`, { align: 'center' })
-    doc.text(`M/s (NOT DEFINED) in the capacity of broker`, { align: 'center' })
+    doc.text(`Mr.${req.user.nameOfUser} in the capacity of broker`, { align: 'center' })
+    // doc.text(`M / s(NOT DEFINED) in the capacity of broker`, { align: 'center' })
     const createdAtDate = new Date(contractData?.createdAt);
+    const date = new Date(contractData.createdAt);
+    const formattedDate = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
     const hour = createdAtDate.getHours();
     const minute = createdAtDate.getMinutes();
-    doc.text(`on ${contractData?.createdAt.toISOString().substring(0, 10)}at ${hour}:${minute}`, { align: 'center' })
+    doc.text(`on ${formattedDate} at ${hour}:${minute} `, { align: 'center' })
+    doc.moveDown()
+    doc.moveDown()
+    doc.moveDown()
 
-    doc.fontSize(11).text(`Contract Number: ${contractData?.contractNumber}`, { bold: true, underline: true, align: 'right' });
+    doc.moveDown()
+
+
+    doc.fontSize(11).text(`Contract Number: ${contractData?.contractNumber} `, { bold: true, underline: true, align: 'right' });
     doc.moveDown()
     doc.fontSize(13).text(`Attachment A`, { bold: true, underline: true, align: 'center' });
     doc.moveDown()
@@ -594,9 +658,9 @@ const createContact = async (req, res) => {
     doc.x = initialX
     doc.moveDown(5)
     doc.fontSize(9).text(`proposed and digitally signed by `, { align: 'center' })
-    doc.text(`Mr.${req.user.nameOfUser} on behalf of`, { align: 'center' })
-    doc.text(`M/s (NOT DEFINED) in the capacity of broker`, { align: 'center' })
-    doc.text(`on ${contractData?.createdAt.toISOString().substring(0, 10)}at ${hour}:${minute}`, { align: 'center' })
+    doc.text(`Mr.${req.user.nameOfUser} `, { align: 'center' })
+    doc.text(` in the capacity of broker`, { align: 'center' })
+    doc.text(`on ${formattedDate} at ${hour}:${minute} `, { align: 'center' })
     doc.moveDown(4)
     // Add buttons
     const buttonWidth = 100;
@@ -611,16 +675,22 @@ const createContact = async (req, res) => {
     // Left-aligned button
     doc.rect(buttonXLeft, buttonY, buttonWidth, buttonHeight).stroke();
     doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/accept/${numberOfContract}`);
+    // doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/accept/${numberOfContract}`);
+
     doc.text('Accept', buttonXLeft + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
 
     // Center-aligned button with link
     doc.rect(buttonXCenter, buttonY, buttonWidth, buttonHeight).stroke();
     doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/reject/${numberOfContract}`);
+    // doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/reject/${numberOfContract}`);
+
     doc.text('Reject', buttonXCenter + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
 
     // Right-aligned button with link
     doc.rect(buttonXRight, buttonY, buttonWidth, buttonHeight).stroke();
     doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/change/${numberOfContract}`);
+    // doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/change/${numberOfContract}`);
+
     doc.text('Request for Change', buttonXRight + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
     doc.end();
 
@@ -630,6 +700,8 @@ const createContact = async (req, res) => {
     //   console.log(`PDF file saved at: ${pdfFilePath} `);
     // });
     const frontendpdf = `https://arbi-front-five.vercel.app/contract/${numberOfContract}`
+    // const frontendpdf = `http://localhost:3000/contract/${numberOfContract}`
+
     const usersname = req.user.nameOfUser
     const volumne = contractData?.volume
     const volumeIns = contractData?.volumePerIns
@@ -644,8 +716,9 @@ const createContact = async (req, res) => {
     contractData.number = contractData?.contractNumber;
     contractData.createdby = req.user.nameOfUser
     await contractData.save()
-    await sendEmail(buyeremail1, "You have a new Proposal", { price1, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
-    await sendEmail(sellerEmail1, "You have a new Proposal", { price1, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
+    const contractNo = contractData?.contractNumber
+    await sendEmail(buyeremail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
+    await sendEmail(sellerEmail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
     return res.status(201).json({
       status: 'success',
       data: contractData,
@@ -705,7 +778,74 @@ const getAllAuthNames = async (req, res) => {
     });
   }
 };
+const getPendingContract = async (req, res) => {
+  try {
+    const userName = req.user.nameOfUser; // Assuming the user's name is accessible through req.user.nameOfUser
 
+    // Assuming ContractModel has fields 'createdBy' and 'status'
+    const pendingContracts = await ContractModel.find({
+      createdby: userName,
+      status: 'none'
+    });
+
+    if (pendingContracts.length === 0) {
+      return res.status(404).json({
+        status: 'failure',
+        error: 'No pending contracts found for the user'
+      });
+    }
+
+    // Assuming each pending contract has a 'pdfFile' field
+    const pdfFiles = pendingContracts.map(contract => contract.pdfFile);
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        pdfFiles: pdfFiles
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 'failure',
+      error: 'An error occurred while fetching the pending contracts'
+    });
+  }
+};
+const getExecutedContract = async (req, res) => {
+  try {
+    const userName = req.user.nameOfUser; // Assuming the user's name is accessible through req.user.nameOfUser
+
+    // Assuming ContractModel has fields 'createdBy' and 'status'
+    const pendingContracts = await ContractModel.find({
+      createdby: userName,
+      status: 'approve'
+    });
+
+    if (pendingContracts.length === 0) {
+      return res.status(404).json({
+        status: 'failure',
+        error: 'No pending contracts found for the user'
+      });
+    }
+
+    // Assuming each pending contract has a 'pdfFile' field
+    const pdfFiles = pendingContracts.map(contract => contract.pdfFile);
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        pdfFiles: pdfFiles
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 'failure',
+      error: 'An error occurred while fetching the pending contracts'
+    });
+  }
+};
 
 module.exports = {
   createContact,
@@ -716,5 +856,7 @@ module.exports = {
   rejectContract,
   getRepresentative,
   getRepresentative2,
-  retrieveEmail
+  retrieveEmail,
+  getPendingContract,
+  getExecutedContract
 };

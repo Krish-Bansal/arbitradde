@@ -1,4 +1,4 @@
-const { createContact, verifyStatus, getAllAdminNames, getAllAuthNames, acceptContract, rejectContract, getRepresentative, getRepresentative2, retrieveEmail } = require("../controllers/contractController");
+const { createContact, verifyStatus, getAllAdminNames, getAllAuthNames, acceptContract, rejectContract, getRepresentative, getRepresentative2, retrieveEmail, getPendingContract, getExecutedContract } = require("../controllers/contractController");
 const { checkAuth } = require("../middleware/checkAdmin");
 
 const router = require("express").Router();
@@ -12,6 +12,8 @@ router.post('/reject', rejectContract)
 router.get('/representative', getRepresentative)
 router.get('/representative2', getRepresentative2)
 router.post('/get-email', retrieveEmail)
+router.get('/pending-contracts', checkAuth, getPendingContract)
+router.get('/executed-contracts', checkAuth, getExecutedContract)
 
 
 

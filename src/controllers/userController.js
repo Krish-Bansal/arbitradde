@@ -53,7 +53,7 @@ const userCreateFunction = async (req, res) => {
       userId,
       password
     })
-    console.log(req.body)
+    //console.log(req.body)
     const data = await userData.save();
     const masteremail = req.body.email
     let generateToken = await createJwt(masteremail)
@@ -61,9 +61,11 @@ const userCreateFunction = async (req, res) => {
       userId: data._id.toString(),
       token: generateToken
     })
-    console.log(masteremail)
+    console.log(generateToken)
     await tokenData.save()
-    let welcomeLink = 'https://arbi-front-five.vercel.app/user/email-verification?token=' + generateToken
+    // let welcomeLink = 'https://arbi-front-five.vercel.app/user/email-verification?token=' + generateToken
+    let welcomeLink = 'http://localhost:3000/user/email-verification?token=' + generateToken
+
     await sendEmail(masteremail, "verify the gmail", { name: req.body.userId, link: welcomeLink }, "./template/welcome.handlebars")
     return res.status(201).json(data)
   } catch (error) {

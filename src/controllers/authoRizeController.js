@@ -24,7 +24,9 @@ const authoRizeUserCreate = async (req, res) => {
     const data = await authoRizeData.save();
 
     // Replace 'id' with 'data._id' in the frontendMPIN URL
-    const frontendMPIN = `https://arbi-front-five.vercel.app/set-mpin/${data._id}`;
+    // const frontendMPIN = `https://arbi-front-five.vercel.app/set-mpin/${data._id}`;
+    const frontendMPIN = `http://localhost:3000/set-mpin/${data._id}`;
+
     await sendEmail(emailId, "Set your MPIN from the link below.", { link: frontendMPIN }, "./template/password.handlebars")
     return res.status(201).json(data)
   } catch (error) {
