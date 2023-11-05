@@ -784,8 +784,16 @@ const getPendingContract = async (req, res) => {
 
     // Assuming ContractModel has fields 'createdBy' and 'status'
     const pendingContracts = await ContractModel.find({
-      createdby: userName,
-      status: 'none'
+      $and: [
+        { status: 'approve' },
+        {
+          $or: [
+            { createdby: userName },
+            { seller: userName },
+            { buyer: userName }
+          ]
+        }
+      ]
     });
 
     if (pendingContracts.length === 0) {
@@ -818,10 +826,17 @@ const getExecutedContract = async (req, res) => {
 
     // Assuming ContractModel has fields 'createdBy' and 'status'
     const pendingContracts = await ContractModel.find({
-      createdby: userName,
-      status: 'approve'
+      $and: [
+        { status: 'approve' },
+        {
+          $or: [
+            { createdby: userName },
+            { seller: userName },
+            { buyer: userName }
+          ]
+        }
+      ]
     });
-
     if (pendingContracts.length === 0) {
       return res.status(404).json({
         status: 'failure',
