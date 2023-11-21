@@ -5,23 +5,11 @@ const UserSchema = new mongoose.Schema(
     registerAs: { type: String, },
     nameOfEntity: { type: String },
     typeOfEntity: { type: String },
-    address:
-    {
-      city: {
-        type: String,
-
-      },
-      landMark: {
-        type: String,
-      },
-      state: {
-        type: String,
-
-      },
-      pin: {
-        type: String,
-
-      },
+    address: {
+      landmark: String,
+      city: String,
+      state: String,
+      pin: String
     },
     mobileNumber: {
       type: String,

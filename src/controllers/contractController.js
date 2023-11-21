@@ -103,12 +103,9 @@ const acceptContract = async (req, res) => {
     if (!contractData) {
       return res.status(404).json({ message: 'Contract not found.' });
     }
-
     if (contractData.status !== 'none') {
       return res.status(400).json({ message: 'Contract has already been processed.' });
     }
-    contractData.status = 'approve';
-    await contractData.save();
     const doc = new PDFDocument();
     const initialX = doc.x
     const pdfFilePath = `public/approvedcontracts/contract_${contractData.contractNumber}.pdf`;
@@ -250,10 +247,6 @@ const acceptContract = async (req, res) => {
       ['4', 'Infestation Damaged Kernel', '1%', ''],
       ['5', 'Total defects consisting of Sr. No 1,2,3 and 4', '9%(Acceptable upto 13%),', 'Rejected above 13%'],
       ['6', 'Moisture', '11%,', 'Acceptable upto 13%,with rebate 1:1,above 13% to be rejected'],
-
-
-
-
     ];
     const columnWidths = [50, 180, 150, 145]; // Adjust the values based on your layout
     const rowHeight = 42;
@@ -316,12 +309,44 @@ const acceptContract = async (req, res) => {
     const seller1 = contractData?.seller
     const buyer1 = contractData?.buyer
     const buyeremail1 = contractData?.buyeremail
+    const selleremail1 = contractData?.sellerEmail
+    const contractno = contractData?.contractNumber
     contractData.pdfFile = shortPdfFileName;
     contractData.number = contractData?.contractNumber
     await contractData.save()
-    await sendEmail(buyeremail1, "Contract Accpeted", { price1, usersname, volumne, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
 
-    return res.json({ message: 'Contract accepted successfully.' });
+    const createdBy = req.user.createdBy;
+    console.log(req.user)
+    // Finding the user in the UserModel
+    const user = await UserModel.findById(createdBy);
+
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    const nameOfEntity = user.nameOfEntity;
+
+    // Checking if 'nameOfEntity' matches 'seller' in contractData
+    if (nameOfEntity === contractData.seller) {
+      contractData.approve1 = true;
+      await contractData.save()
+    }
+    if (nameOfEntity === contractData.buyer) {
+      contractData.approve2 = true;
+      await contractData.save()
+    }
+
+    // Check for 'approve1' and 'approve2'
+    if (contractData.approve1 && contractData.approve2) {
+      contractData.status = 'approve';
+      await sendEmail(buyeremail1, "Contract Accepted", { contractno, price1, usersname, volumne, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/accept.handlebars")
+      await sendEmail(selleremail1, "Contract Accepted", { contractno, price1, usersname, volumne, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/accept.handlebars")
+      await contractData.save();
+
+      return res.json({ message: 'Contract accepted successfully.' });
+
+    }
+
   } catch (error) {
     console.error('Error accepting contract:', error);
     return res.status(500).json({ message: 'An error occurred while accepting the contract.' });
@@ -499,12 +524,15 @@ const createContact = async (req, res) => {
     const pdfFilePath = `public/contracts/contract_${contractData.contractNumber}.pdf`;
     const pdfStream = fs.createWriteStream(pdfFilePath);
     // Assuming contractData.createdAt is a Date object
-    const tradeDate = contractData?.createdAt.toISOString().substring(0, 10);
+    const tradeDate = contractData?.createdAt;
     doc.pipe(pdfStream);
     doc.fontSize(14).text(`Trade Confirmation (Contract Number:${contractData?.contractNumber})`, { align: 'center', underline: true, bold: true });
     doc.moveDown();
     // doc.fontSize(11).text(`Contract Number:${contractData?.contractNumber}`, { underline: true, align: 'right' });
-    doc.fontSize(11).text(`Trade Date:${tradeDate}`);
+    // Assuming tradeDate is a Date object
+
+    const formattedDate3 = tradeDate.toLocaleDateString('en-GB');
+    doc.fontSize(11).text(`Trade Date:${formattedDate3}`);
     doc.moveDown();
 
     const pageWidth = 595; // Width of the page in points (adjust as needed)
@@ -528,16 +556,43 @@ const createContact = async (req, res) => {
 
     const buyerTextX = buyerX - 100; // X position for "Buyer Data"
     const buyerTextY = sellerY + 10; // Y position for "Buyer Data"
-    doc.text('Buyer:', buyerTextX, buyerTextY, { continued: true });
+    doc.text('Buyer:', buyerTextX + 10, buyerTextY, { continued: true });
     doc.text(contractData?.buyer, { continued: false });
+    console.log(seller)
+    console.log(buyer)
+
+    // Assuming seller's name is in contractData
+    async function findUserByName(name) {
+      try {
+        return await UserModel.findOne({ nameOfEntity: name });
+      } catch (error) {
+        console.error("Error finding user:", error.message);
+        return null;
+      }
+    }
+
+    const matchedSeller = await findUserByName(seller);
+    const matchedBuyer = await findUserByName(buyer);
+
+    console.log(matchedSeller)
+    console.log(matchedBuyer?.address)
+
+    const buyerName = contractData?.buyer;
 
     // Move down after the boxes and buyer data
     doc.moveDown(4);
+    doc.text('Address:', sellerX + 10, sellerY + 30, { continued: true });
+    doc.text(`${matchedSeller?.address?.landmark},${matchedSeller?.address?.city},${matchedSeller?.address?.pin}`, { continued: true });
+    doc.moveDown();
+
+    doc.text('Address:', buyerTextX - 30, buyerTextY + 20, { continued: true });
+    doc.text(`${matchedBuyer?.address?.landmark},${matchedBuyer?.address?.city},${matchedBuyer?.address?.pin}`, { continued: false });
     doc.x = initialX
+    doc.moveDown(3);
     doc.text('Seller Represented by Mr ', { continued: true });
-    doc.text(contractData?.seller, { underline: true, continued: true });
+    doc.text(contractData?.sellerRepresentative, { underline: true, continued: true });
     doc.text(' hereby agrees to sell and Buyer Represented By Mr ', { underline: false, continued: true });
-    doc.text(contractData?.buyer, { underline: true, continued: true });
+    doc.text(contractData?.buyerRepresentative, { underline: true, continued: true });
     doc.text(' agrees to purchase the commodity in accordance with the following terms and conditions:-', { underline: false });
     doc.moveDown()
     doc.text('Commodity: ', { bold: true, continued: true })
@@ -557,28 +612,31 @@ const createContact = async (req, res) => {
     doc.text(contractData?.origin, { continued: true })
     doc.text(`Destination: ${contractData?.destination}`, { bold: true, continued: false, align: 'center' })
     doc.moveDown()
-    doc.text('Delivery Period: ', { continued: true, align: 'left' })
-    doc.text(contractData?.deliveryPeriod.toISOString().substring(0, 10), { continued: true })
+    doc.text('Delivery Period: From ', { continued: true, align: 'left' })
+    // const formattedDate3 = tradeDate.toLocaleDateString('en-GB');
+    doc.text(contractData?.deliveryPeriod.toLocaleDateString('en-GB'), { continued: true })
+    doc.text(' to ', { continued: true, })
+    doc.text(contractData?.deliveryPeriodto.toLocaleDateString('en-GB'), { continued: true })
     doc.text(`Delivery Basis: ${contractData?.deliveryBasis}`, { continued: false, bold: false, align: 'center' })
     doc.moveDown()
     doc.text('Mode of Transport: ', { bold: true, continued: true, align: 'left' })
     doc.text(contractData?.modeOfTransport)
     doc.moveDown()
     doc.text('Price: Rs.', { bold: true, continued: true, })
-    doc.text(contractData?.price, { underline: true, continued: true })
+    doc.text(contractData?.price, { continued: true })
     doc.text('/- per ', { underline: false, continued: true });
 
     doc.text(contractData?.pricePerIns, { underline: false, continued: false })
 
     doc.moveDown()
     doc.text('Payment Term: ', { bold: true, continued: true })
-    doc.text(`Within ${contractData?.paymentTerm} after ${contractData?.deliveryBasis}`)
+    doc.text(`${contractData?.paymentTerm}`)
     doc.moveDown()
     doc.text('Free Time: ', { continued: true, align: 'left' })
     doc.text(`${contractData?.freeTime} ${contractData?.freeTimePerIns}`, { continued: false })
     doc.moveDown()
     doc.text('Detention Charges: Rs.', { continued: true })
-    doc.text(contractData?.detentionOrDemurrageCharges, { underline: true, continued: true })
+    doc.text(contractData?.detentionOrDemurrageCharges, { continued: true })
     doc.text('/- ', { underline: false, continued: true });
     doc.text(`${detentionOrDemurrageChargesPerIns} `, { underline: false, continued: false, bold: false })
     doc.moveDown()
@@ -590,8 +648,15 @@ const createContact = async (req, res) => {
     doc.text(`Dispute Resolution: Arbitration as provided under All India Grain Merchants Association Rules.`)
     doc.moveDown()
     doc.fontSize(9).text(`proposed and digitally signed by `, { align: 'center' })
-    doc.text(`Mr.${req.user.nameOfUser} in the capacity of broker`, { align: 'center' })
-    // doc.text(`M / s(NOT DEFINED) in the capacity of broker`, { align: 'center' })
+    doc.text(`Mr.${req.user.nameOfUser} `, { align: 'center' })
+    const createdByUserId2 = req.user.createdBy;
+    const user2 = await UserModel.findById(createdByUserId2);
+    if (!user2) {
+      return res.status(404).json({ error: 'User not found' });
+    } else {
+      doc.text(`on behalf of ${user2?.nameOfEntity} `, { align: 'center' })
+    }
+    doc.text(` in the capacity of broker`, { align: 'center' })
     const createdAtDate = new Date(contractData?.createdAt);
     const date = new Date(contractData.createdAt);
     const formattedDate = date.toLocaleDateString('en-GB', {
@@ -659,6 +724,13 @@ const createContact = async (req, res) => {
     doc.moveDown(5)
     doc.fontSize(9).text(`proposed and digitally signed by `, { align: 'center' })
     doc.text(`Mr.${req.user.nameOfUser} `, { align: 'center' })
+    const createdByUserId1 = req.user.createdBy;
+    const user1 = await UserModel.findById(createdByUserId1);
+    if (!user1) {
+      return res.status(404).json({ error: 'User not found' });
+    } else {
+      doc.text(`on behalf of ${user1?.nameOfEntity} `, { align: 'center' })
+    }
     doc.text(` in the capacity of broker`, { align: 'center' })
     doc.text(`on ${formattedDate} at ${hour}:${minute} `, { align: 'center' })
     doc.moveDown(4)
@@ -674,22 +746,22 @@ const createContact = async (req, res) => {
 
     // Left-aligned button
     doc.rect(buttonXLeft, buttonY, buttonWidth, buttonHeight).stroke();
-    doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/accept/${numberOfContract}`);
-    // doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/accept/${numberOfContract}`);
+    // doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/accept/${numberOfContract}`);
+    doc.link(buttonXLeft, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/accept/${numberOfContract}`);
 
     doc.text('Accept', buttonXLeft + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
 
     // Center-aligned button with link
     doc.rect(buttonXCenter, buttonY, buttonWidth, buttonHeight).stroke();
-    doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/reject/${numberOfContract}`);
-    // doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/reject/${numberOfContract}`);
+    // doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/reject/${numberOfContract}`);
+    doc.link(buttonXCenter, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/reject/${numberOfContract}`);
 
     doc.text('Reject', buttonXCenter + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
 
     // Right-aligned button with link
     doc.rect(buttonXRight, buttonY, buttonWidth, buttonHeight).stroke();
-    doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/change/${numberOfContract}`);
-    // doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/change/${numberOfContract}`);
+    // doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `https://arbi-front-five.vercel.app/contract/change/${numberOfContract}`);
+    doc.link(buttonXRight, buttonY, buttonWidth, buttonHeight, `http://localhost:3000/contract/change/${numberOfContract}`);
 
     doc.text('Request for Change', buttonXRight + 5, buttonY + 5, { width: buttonWidth - 10, align: 'center' });
     doc.end();
@@ -699,30 +771,38 @@ const createContact = async (req, res) => {
     // console.log(`PDF file saved with short name: ${shortPdfFileName}`); pdfStream.on('finish', () => {
     //   console.log(`PDF file saved at: ${pdfFilePath} `);
     // });
-    const frontendpdf = `https://arbi-front-five.vercel.app/contract/${numberOfContract}`
-    // const frontendpdf = `http://localhost:3000/contract/${numberOfContract}`
+    // const frontendpdf = `https://arbi-front-five.vercel.app/contract/${numberOfContract}`
+    const frontendpdf = `http://localhost:3000/contract/${numberOfContract}`
 
-    const usersname = req.user.nameOfUser
-    const volumne = contractData?.volume
-    const volumeIns = contractData?.volumePerIns
-    const commodity1 = contractData?.commodity
-    const price1 = contractData?.price
-    const priceperIns = contractData?.pricePerIns
-    const seller1 = contractData?.seller
-    const buyer1 = contractData?.buyer
-    const buyeremail1 = contractData?.buyeremail
-    const sellerEmail1 = contractData?.sellerEmail
-    contractData.pdfFile = shortPdfFileName;
-    contractData.number = contractData?.contractNumber;
-    contractData.createdby = req.user.nameOfUser
-    await contractData.save()
-    const contractNo = contractData?.contractNumber
-    await sendEmail(buyeremail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
-    await sendEmail(sellerEmail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
-    return res.status(201).json({
-      status: 'success',
-      data: contractData,
-    });
+    const createdByUserId = req.user.createdBy;
+    const user = await UserModel.findById(createdByUserId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    } else {
+      const usersname = user.nameOfEntity; // Access the nameOfEntity field
+      const volumne = contractData?.volume
+      const volumeIns = contractData?.volumePerIns
+      const commodity1 = contractData?.commodity
+      const price1 = contractData?.price
+      const priceperIns = contractData?.pricePerIns
+      const seller1 = contractData?.seller
+      const buyer1 = contractData?.buyer
+      const buyeremail1 = contractData?.buyeremail
+      const sellerEmail1 = contractData?.sellerEmail
+      contractData.pdfFile = shortPdfFileName;
+      contractData.number = contractData?.contractNumber;
+      contractData.createdby = req.user.nameOfUser
+      await contractData.save()
+      const contractNo = contractData?.contractNumber
+      await sendEmail(buyeremail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
+      await sendEmail(sellerEmail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
+      return res.status(201).json({
+        status: 'success',
+        data: contractData,
+      });
+    }
+
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "failure", error: error.message });
@@ -744,8 +824,8 @@ const verifyStatus = async (req, res) => {
 
 const getAllAdminNames = async (req, res) => {
   try {
-    // Fetch all users from the database
-    const users = await UserModel.find({}, 'nameOfEntity'); // Assuming 'name' is the field you want to retrieve
+    // Fetch users with register equal to 1 and retrieve only the 'nameOfEntity' field
+    const users = await UserModel.find({ registerAs: '1' }, 'nameOfEntity');
     // Extract names from users
     const userNames = users.map(user => user.nameOfEntity);
     return res.status(200).json({
@@ -760,6 +840,7 @@ const getAllAdminNames = async (req, res) => {
     });
   }
 };
+
 const getAllAuthNames = async (req, res) => {
   try {
     // Fetch all users from the database

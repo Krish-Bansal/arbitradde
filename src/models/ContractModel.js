@@ -45,6 +45,8 @@ const ContractSchema = new mongoose.Schema(
     createdby: { type: String },
     isProcessComplete: { type: Boolean, default: false },
     status: { type: String, enum: ["approve", "reject", "change", "none"], default: "none" },
+    approve1: { type: Boolean, default: false },
+    approve2: { type: Boolean, default: false },
     pdfFile: { type: String }
   },
   { timestamps: true }

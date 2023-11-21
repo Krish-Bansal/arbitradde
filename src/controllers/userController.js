@@ -29,18 +29,13 @@ const userCreateFunction = async (req, res) => {
       entityRegistrationNo,
       entityRegistrationFile,
       userId,
-      password
+      password, address
     } = req.body;
     const userData = new UserModel({
       registerAs,
       nameOfEntity,
       typeOfEntity,
-      address: {
-        landmark: req.body.landmark,
-        city: req.body.city,
-        state: req.body.state,
-        pin: req.body.pin
-      },
+      address,
       mobileNumber,
       whatsAppNumber,
       email,
@@ -53,7 +48,7 @@ const userCreateFunction = async (req, res) => {
       userId,
       password
     })
-    //console.log(req.body)
+    console.log(req.body)
     const data = await userData.save();
     const masteremail = req.body.email
     let generateToken = await createJwt(masteremail)
@@ -65,7 +60,6 @@ const userCreateFunction = async (req, res) => {
     await tokenData.save()
     // let welcomeLink = 'https://arbi-front-five.vercel.app/user/email-verification?token=' + generateToken
     let welcomeLink = 'http://localhost:3000/user/email-verification?token=' + generateToken
-
     await sendEmail(masteremail, "verify the gmail", { name: req.body.userId, link: welcomeLink }, "./template/welcome.handlebars")
     return res.status(201).json(data)
   } catch (error) {
