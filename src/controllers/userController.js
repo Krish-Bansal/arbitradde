@@ -58,8 +58,8 @@ const userCreateFunction = async (req, res) => {
     })
     console.log(generateToken)
     await tokenData.save()
-    // let welcomeLink = 'https://arbi-front-five.vercel.app/user/email-verification?token=' + generateToken
-    let welcomeLink = 'http://localhost:3000/user/email-verification?token=' + generateToken
+    let welcomeLink = 'https://arbi-front-five.vercel.app/user/email-verification?token=' + generateToken
+    // let welcomeLink = 'http://localhost:3000/user/email-verification?token=' + generateToken
     await sendEmail(masteremail, "verify the gmail", { name: req.body.userId, link: welcomeLink }, "./template/welcome.handlebars")
     return res.status(201).json(data)
   } catch (error) {
