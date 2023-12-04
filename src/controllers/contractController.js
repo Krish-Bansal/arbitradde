@@ -640,23 +640,23 @@ const createContact = async (req, res) => {
     doc.text('/- ', { underline: false, continued: true });
     doc.text(`${detentionOrDemurrageChargesPerIns} `, { underline: false, continued: false, bold: false })
     doc.moveDown()
-    doc.text('Other Terms: ', { bold: true, continued: true, })
-    doc.text(` ${contractData?.otherTerms} `)
-    doc.moveDown()
-    doc.text(`Applicable Trade Rules: This Trade Confirmation shall be governed by All India Grain Merchant Association Rules.`)
-    doc.moveDown()
-    doc.text(`Dispute Resolution: Arbitration as provided under All India Grain Merchants Association Rules.`)
-    doc.moveDown()
-    doc.fontSize(9).text(`proposed and digitally signed by `, { align: 'center' })
-    doc.text(`Mr.${req.user.nameOfUser} `, { align: 'center' })
+
+    // Existing content...
+    doc.text('Other Terms: ', { bold: true, continued: true, });
+    doc.text(` ${contractData?.otherTerms} `);
+    doc.moveDown();
+    doc.text(`Applicable Trade Rules: This Trade Confirmation shall be governed by All India Grain Merchant Association Rules.`);
+    doc.moveDown();
+    doc.text(`Dispute Resolution: Arbitration as provided under All India Grain Merchants Association Rules.`);
+
     const createdByUserId2 = req.user.createdBy;
     const user2 = await UserModel.findById(createdByUserId2);
     if (!user2) {
       return res.status(404).json({ error: 'User not found' });
     } else {
-      doc.text(`on behalf of ${user2?.nameOfEntity} `, { align: 'center' })
+      // Continue adding footer-related content here if needed
     }
-    doc.text(` in the capacity of broker`, { align: 'center' })
+
     const createdAtDate = new Date(contractData?.createdAt);
     const date = new Date(contractData.createdAt);
     const formattedDate = date.toLocaleDateString('en-GB', {
@@ -666,7 +666,46 @@ const createContact = async (req, res) => {
     });
     const hour = createdAtDate.getHours();
     const minute = createdAtDate.getMinutes();
-    doc.text(`on ${formattedDate} at ${hour}:${minute} `, { align: 'center' })
+
+    const footerText = `proposed and digitally signed by Mr.${req.user.nameOfUser} on behalf of ${user2?.nameOfEntity} in the capacity of broker on ${formattedDate} at ${hour}:${minute}`;
+
+    function addLineBreaks(text) {
+      const words = text.split(' ');
+      const wordsPerLine = Math.floor(Math.random() * 3) + 3; // Generate a random number of words per line between 3 to 5
+      let newText = '';
+      for (let i = 0; i < words.length; i += wordsPerLine) {
+        newText += words.slice(i, i + wordsPerLine).join(' ') + '\n';
+      }
+      return newText;
+    }
+
+    const modifiedFooterText = addLineBreaks(footerText);
+    const footerHeight = doc.heightOfString(modifiedFooterText, { width: doc.page.width });
+    const maxContentHeight = doc.page.height - footerHeight - 70; // Adjust as needed
+
+    // Check if there's enough space for the footer
+    if (footerHeight < maxContentHeight) {
+      // Position the footer at the bottom of the page
+      doc.fontSize(9).text(modifiedFooterText, {
+        align: 'center',
+        width: doc.page.width - 130,
+        lineGap: 3, // Adjust line gap for readability
+        height: footerHeight + 10,
+        characterSpacing: 0, // Adjust character spacing if needed
+      });
+    } else {
+      // Add a new page and place the footer
+      doc.addPage().fontSize(9).text(modifiedFooterText, {
+        align: 'center',
+        width: doc.page.width - 130,
+        lineGap: 3, // Adjust line gap for readability
+        height: footerHeight + 10,
+        characterSpacing: 1, // Adjust character spacing if needed
+      });
+    }
+
+
+
     doc.moveDown()
     doc.moveDown()
     doc.moveDown()
