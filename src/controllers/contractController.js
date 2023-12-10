@@ -343,9 +343,10 @@ const acceptContract = async (req, res) => {
       await sendEmail(selleremail1, "Contract Accepted", { contractno, price1, usersname, volumne, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/accept.handlebars")
       await contractData.save();
 
-      return res.json({ message: 'Contract accepted successfully.' });
 
     }
+    return res.json({ message: 'Contract accepted successfully.' });
+
 
   } catch (error) {
     console.error('Error accepting contract:', error);
