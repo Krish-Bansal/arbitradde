@@ -573,10 +573,6 @@ const createContact = async (req, res) => {
 
     const matchedSeller = await findUserByName(seller);
     const matchedBuyer = await findUserByName(buyer);
-
-    console.log(matchedSeller)
-    console.log(matchedBuyer?.address)
-
     const buyerName = contractData?.buyer;
 
     // Move down after the boxes and buyer data
@@ -666,8 +662,15 @@ const createContact = async (req, res) => {
     });
     const hour = createdAtDate.getHours();
     const minute = createdAtDate.getMinutes();
-
-    const footerText = `proposed and digitally signed by Mr.${req.user.nameOfUser} on behalf of ${user2?.nameOfEntity} in the capacity of broker on ${formattedDate} at ${hour}:${minute}`;
+    console.log(user2.registerAs)
+    const footerText = `proposed and digitally signed by Mr.${req.user.nameOfUser} on behalf of ${user2?.nameOfEntity} in the capacity of ${user2?.registerAs === "1" && user2.nameOfEntity === contractData?.seller
+      ? 'seller'
+      : user2?.registerAs === "1" && user2.nameOfEntity === contractData?.buyer
+        ? 'buyer'
+        : user2?.registerAs === "2"
+          ? 'broker'
+          : 'trader'
+      } on ${formattedDate} at ${hour}:${minute}`;
 
     function addLineBreaks(text) {
       const words = text.split(' ');
@@ -770,7 +773,14 @@ const createContact = async (req, res) => {
     } else {
       doc.text(`on behalf of ${user1?.nameOfEntity} `, { align: 'center' })
     }
-    doc.text(` in the capacity of broker`, { align: 'center' })
+    doc.text(` in the capacity of ${user2?.registerAs === "1" && user2.nameOfEntity === contractData?.seller
+      ? 'seller'
+      : user2?.registerAs === "1" && user2.nameOfEntity === contractData?.buyer
+        ? 'buyer'
+        : user2?.registerAs === "2"
+          ? 'broker'
+          : 'trader'
+      }`, { align: 'center' })
     doc.text(`on ${formattedDate} at ${hour}:${minute} `, { align: 'center' })
     doc.moveDown(4)
     // Add buttons
@@ -833,8 +843,22 @@ const createContact = async (req, res) => {
       contractData.createdby = req.user.nameOfUser
       await contractData.save()
       const contractNo = contractData?.contractNumber
-      await sendEmail(buyeremail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
-      await sendEmail(sellerEmail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars")
+      if (req.user.email !== buyeremail1 && req.user.email !== sellerEmail1) {
+        // Send email to buyer
+        await sendEmail(buyeremail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars");
+
+        // Send email to seller
+        await sendEmail(sellerEmail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars");
+        console.log("both buyer and seller sent")
+      } else if (req.user.email === buyeremail1) {
+        await sendEmail(sellerEmail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars");
+        console.log("sent to seller")
+
+      } else if (req.user.email === sellerEmail1) {
+        await sendEmail(buyeremail1, "You have a new Proposal", { price1, contractNo, usersname, volumne, volumePerIns, frontendpdf, commodity1, price1, priceperIns, seller1, buyer1 }, "./template/contract.handlebars");
+        console.log("sent to buyer")
+
+      }
       return res.status(201).json({
         status: 'success',
         data: contractData,
